@@ -1,0 +1,242 @@
+{
+  "name": "AI Appointment Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hello! I am your AI Appointment Assistant. How can I help you today? You can book, check availability, reschedule, or cancel appointments with me.",
+        "options": {}
+      },
+      "id": "e3121f11-2085-47fd-bb06-728b55cfcb74",
+      "name": "When Chat Message Received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        -256
+      ],
+      "webhookId": "e63d7678-67a8-4eb3-9411-defcd6783768"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are an AI Receptionist for booking appointments.\nYour default timezone is 'Asia/Karachi'. Current date/time is {{ $now.tz('Asia/Karachi').format('YYYY-MM-DD HH:mm') }}.\nRules:\n1. Be polite and concise.\n2. Collect required details before booking: full_name, email, phone (optional), service, start_time (ISO format), end_time (ISO format).\n3. Before finalizing a booking, ALWAYS check availability first.\n4. When booking, ask for explicit confirmation before calling the booking tool.\n5. When rescheduling or cancelling, require the booking_reference and customer email."
+        }
+      },
+      "id": "e2cae27b-7f11-4193-9d26-6171a1f6ee3a",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        384,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "id": "4378c01e-079f-477d-8814-07a861352911",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -16
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "d770e4a6-2c7e-4c59-aa9b-c64b88a385dc",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "syedattah4455m@gmail.com",
+          "mode": "list",
+          "cachedResultName": "syedattah4455m@gmail.com"
+        },
+        "limit": 20,
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('start_time', 'Start of the requested slot in ISO 8601 format, e.g. 2026-11-01T10:00:00+05:00') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('end_time', 'End of the requested slot in ISO 8601 format, e.g. 2026-11-01T11:00:00+05:00') }}",
+        "options": {}
+      },
+      "id": "34eed937-3628-4b42-8d9c-3f9db769ae79",
+      "name": "Check Availability",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        0
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "MDtgSjFwXowGpNgE",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "syedattah4455m@gmail.com",
+          "mode": "list",
+          "cachedResultName": "syedattah4455m@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('start_time', 'Appointment start in ISO 8601 format') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('end_time', 'Appointment end in ISO 8601 format') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', 'Customer email address') }}"
+          ],
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('details', 'Customer full name, email, phone and service') }}",
+          "sendUpdates": "all",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('summary', 'Event title, e.g. \"<service> - <full_name>\"') }}"
+        }
+      },
+      "id": "d263f670-0961-4aed-a04f-50e9c3046a78",
+      "name": "Book Appointment",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        16
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "MDtgSjFwXowGpNgE",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "syedattah4455m@gmail.com",
+          "mode": "list",
+          "cachedResultName": "syedattah4455m@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('booking_reference', 'Calendar event ID returned when the appointment was booked') }}",
+        "options": {
+          "sendUpdates": "all"
+        }
+      },
+      "id": "5b39745e-a504-43e3-879e-64647294c660",
+      "name": "Cancel Appointment",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        848,
+        -64
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "MDtgSjFwXowGpNgE",
+          "name": "Google Calendar account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Chat Message Received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Availability": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Appointment": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel Appointment": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "88603744-d710-41cb-afcf-6ea3f596f7f1",
+  "meta": {
+    "instanceId": "9b6d553ba0b1f2d80f8d61968c0de8e067456c5823865c7afc70c331482e437b"
+  },
+  "nodeGroups": [],
+  "id": "N063iJbgYGZDi8bq",
+  "tags": []
+}
