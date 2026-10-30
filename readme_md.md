@@ -32,10 +32,7 @@ The project consists of two core n8n workflows and a PostgreSQL relational schem
 ```text
 .
 ├── README.md                       # Project documentation
-├── schema.sql                      # PostgreSQL database schema
 ├── ai_appointment_assistant.json   # Primary AI agent workflow
-├── appointment_reminder_cron.json  # Background 24-hour reminder workflow
-└── .gitignore                      # Environment and credential exclusion rules
 ```
 
 ---
